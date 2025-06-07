@@ -26,9 +26,21 @@ def reset_session_context(context: Token) -> None:
     session_context.reset(context)
 
 
+engine_config = {
+    "pool_recycle": 3600,
+    "pool_pre_ping": True,
+    "echo": bool(config.SHOW_SQL_ALCHEMY_QUERIES),
+    "connect_args": {
+        "timeout": 30,
+        "autocommit": False,
+    },
+    "pool_size": 10,
+    "max_overflow": 20,
+}
+
 engines = {
-    "writer": create_async_engine(config.POSTGRES_URL, pool_recycle=3600),
-    "reader": create_async_engine(config.POSTGRES_URL, pool_recycle=3600),
+    "writer": create_async_engine(config.database_url, **engine_config),
+    "reader": create_async_engine(config.database_url, **engine_config),
 }
 
 
@@ -52,12 +64,6 @@ session: Union[AsyncSession, async_scoped_session] = async_scoped_session(
 
 
 async def get_session():
-    """
-    Get the database session.
-    This can be used for dependency injection.
-
-    :return: The database session.
-    """
     try:
         yield session
     finally:
