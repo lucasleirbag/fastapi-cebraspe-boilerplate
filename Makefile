@@ -84,6 +84,28 @@ celery-worker: ## Start celery worker
 
 	poetry run celery -A worker worker -l info
 
+.PHONY: create-default-user
+create-default-user: ## Create default user (requires env vars: DEFAULT_USER_USERNAME, DEFAULT_USER_EMAIL, DEFAULT_USER_PASSWORD)
+	$(eval include .env)
+	$(eval export $(sh sed 's/=.*//' .env))
+	
+	@if [ -z "$$DEFAULT_USER_USERNAME" ] || [ -z "$$DEFAULT_USER_EMAIL" ] || [ -z "$$DEFAULT_USER_PASSWORD" ]; then \
+		echo "❌ Erro: Defina as variáveis de ambiente obrigatórias:"; \
+		echo "   export DEFAULT_USER_USERNAME=seu_usuario"; \
+		echo "   export DEFAULT_USER_EMAIL=seu_email@exemplo.com"; \
+		echo "   export DEFAULT_USER_PASSWORD=sua_senha_segura"; \
+		echo "   export DEFAULT_USER_IS_ADMIN=true  # (opcional)"; \
+		echo ""; \
+		echo "Ou adicione no arquivo .env:"; \
+		echo "   DEFAULT_USER_USERNAME=seu_usuario"; \
+		echo "   DEFAULT_USER_EMAIL=seu_email@exemplo.com"; \
+		echo "   DEFAULT_USER_PASSWORD=sua_senha_segura"; \
+		echo "   DEFAULT_USER_IS_ADMIN=true"; \
+		exit 1; \
+	fi
+	
+	PYTHONPATH=. poetry run python scripts/create_default_user.py
+
 # Check, lint and format targets
 # ------------------------------
 
